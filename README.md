@@ -1,50 +1,89 @@
-# 수업진도 체크표
+# Lesson Progress Board
 
-단일 과목 기준으로 `관리창`, `실행창`, `반별 최근 진도`를 제공하는 Next.js 웹앱입니다.
+Single-subject lesson progress web app for teachers.
 
-## 실행 방식
+This app is built for one teacher using one PC locally. It separates content management from the lesson execution board so the teacher can register lesson items in advance and check progress by class after each period.
 
-이 프로젝트는 `Y:` 구글드라이브 경로에서 직접 `npm install`이 안정적으로 되지 않을 수 있습니다.  
-그래서 원본 소스는 현재 폴더에 두고, 실행은 로컬 NTFS 경로로 동기화해서 진행합니다.
+## Features
 
-로컬 실행 스크립트:
+- `/admin`: register, edit, reorder, disable, and delete lesson item rows
+- `/board`: create a lesson row by date, period, and lesson item, then check `EMPTY -> O -> X -> EMPTY` for classes `1` to `9`
+- `/progress`: view the latest recorded progress for each class
+- SQLite-based local persistence
+- PWA-ready manifest and install icons
+
+## Tech Stack
+
+- Next.js
+- TypeScript
+- SQLite
+- Local helper script for Google Drive based workspace syncing
+
+## Project Structure
+
+```text
+src/app/admin       Management screen
+src/app/board       Lesson execution screen
+src/app/progress    Latest progress screen
+src/app/api         App routes for lesson items, rows, checks, and progress
+src/components      UI panels and shared shell
+src/lib             Database and shared constants/types
+scripts/local.ps1   Sync/run helper for local NTFS execution
+```
+
+## Run Locally
+
+This project is edited in a Google Drive path, so direct dependency installs on `Y:` may be unstable.
+
+Use the local helper script instead:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\local.ps1 -Command dev
 ```
 
-기본 포트는 `3000`입니다. 다른 포트를 쓰려면:
+Default port is `3000`.
+
+To run on another port:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\local.ps1 -Command dev -Port 3100
 ```
 
-## 지원 명령
+## Common Commands
 
 ```powershell
-# 소스만 로컬 실행 폴더로 동기화
+# Sync source into the local NTFS runtime folder
 powershell -ExecutionPolicy Bypass -File .\scripts\local.ps1 -Command sync
 
-# 개발 서버 실행
+# Run development server
 powershell -ExecutionPolicy Bypass -File .\scripts\local.ps1 -Command dev
 
-# 타입 검사
+# Type check
 powershell -ExecutionPolicy Bypass -File .\scripts\local.ps1 -Command typecheck
 
-# 린트
+# Lint
 powershell -ExecutionPolicy Bypass -File .\scripts\local.ps1 -Command lint
 
-# 프로덕션 빌드
+# Production build
 powershell -ExecutionPolicy Bypass -File .\scripts\local.ps1 -Command build
 
-# 빌드 후 실행
+# Start production server
 powershell -ExecutionPolicy Bypass -File .\scripts\local.ps1 -Command start
 ```
 
-## 로컬 작업 경로
+## Local Runtime Paths
 
-- 실행본: `C:\CodexTemp\lesson-progress-board-run`
-- 의존성: `C:\CodexTemp\lesson-progress-board-deps`
-- 데이터: `C:\CodexTemp\lesson-progress-board-data`
+- Runtime copy: `C:\CodexTemp\lesson-progress-board-run`
+- Dependencies: `C:\CodexTemp\lesson-progress-board-deps`
+- Data: `C:\CodexTemp\lesson-progress-board-data`
+- Logs: `C:\CodexTemp\lesson-progress-board-logs`
 
-데이터 파일은 별도 경로에 저장되므로, 소스를 다시 동기화해도 진도 기록은 유지됩니다.
+The data folder is separate from the source folder, so lesson records remain after syncing code again.
+
+## Current Scope
+
+- Single subject only
+- Fixed classes: `1` to `9`
+- Fixed periods: `1` to `7`
+- No login
+- No export or print support yet
