@@ -55,6 +55,16 @@ powershell -ExecutionPolicy Bypass -File .\scripts\local.ps1 -Command dev -Port 
 - If no database URL is set on Vercel, the app falls back to in-memory storage to avoid a 500 crash.
 - In-memory mode is only for preview or demo use. Data will not persist reliably between deployments or server instances.
 
+### Make Data Persistent on Vercel
+
+1. Open the Vercel project dashboard.
+2. Add a Postgres database from the Vercel Marketplace or connect an external Postgres provider.
+3. Confirm that at least one of these environment variables is present in the project:
+   `POSTGRES_URL`, `POSTGRES_PRISMA_URL`, `POSTGRES_URL_NON_POOLING`, or `DATABASE_URL`
+4. Redeploy the project.
+
+The app will automatically switch from in-memory mode to Postgres when one of those variables is available.
+
 ## Common Commands
 
 ```powershell
