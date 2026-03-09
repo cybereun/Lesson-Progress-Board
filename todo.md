@@ -32,30 +32,34 @@
   - `https://github.com/cybereun/Lesson-Progress-Board.git`
 - README 정리 완료
 - `v0.1.0` 태그 생성 완료
-- Vercel 500 대응 완료
-  - 원인: 로컬 SQLite/파일시스템 의존
-  - 조치: 저장소 계층을 분리해 로컬은 SQLite, Vercel은 Postgres, 미설정 시 메모리 fallback
+- Vercel 500 오류 대응 완료
+  - 원인: 로컬 SQLite 및 파일시스템 의존
+  - 조치: 로컬은 SQLite, Vercel은 Postgres, 미설정 시 메모리 fallback 구조로 분리
 - Vercel 배포용 환경 예시 파일 추가
   - `.env.example`
+- Vercel 프로젝트에 Neon 연결 완료
+- Vercel 환경변수 확인 완료
+  - `POSTGRES_URL`
+  - `POSTGRES_PRISMA_URL`
+  - `POSTGRES_URL_NON_POOLING`
+  - `DATABASE_URL`
+- Neon 연결 후 Vercel 재배포 완료
+- 재배포 후 배포 환경에서 데이터 유지 확인 완료
 
 ## 검증 완료
 
 - 로컬 타입체크 통과
 - 로컬 빌드 통과
-- `VERCEL=1` 환경으로 실행 시 `/`와 `/admin` 응답 200 확인
+- `VERCEL=1` 환경에서 `/`와 `/admin` 응답 200 확인
+- Vercel 배포 환경에서 Neon 기반 영속 저장 확인
 
-## 남은 일
+## 현재 상태
 
-- Vercel 프로젝트에 Neon 연결
-- Vercel 환경변수 확인
-  - `POSTGRES_URL`
-  - `POSTGRES_PRISMA_URL`
-  - `POSTGRES_URL_NON_POOLING`
-  - `DATABASE_URL`
-- Neon 연결 후 Vercel 재배포
-- 재배포 후 실제 데이터가 배포 환경에서 유지되는지 확인
+- 로컬 실행 시 SQLite 사용
+- Vercel 배포 시 Postgres 사용
+- 데이터 영속 저장 구성 완료
 
 ## 참고 메모
 
-- 현재 코드는 Postgres 환경변수가 있으면 자동으로 Postgres 사용
-- Vercel에서 DB 환경변수가 없으면 메모리 모드로 동작하므로 데이터가 유지되지 않음
+- Postgres 환경변수가 있으면 자동으로 Postgres 사용
+- Vercel에서 DB 환경변수가 없을 때만 메모리 모드로 fallback
