@@ -11,7 +11,7 @@ export async function PATCH(
   try {
     const { id } = await context.params;
     const body = await request.json();
-    const item = updateLessonItem(Number(id), {
+    const item = await updateLessonItem(Number(id), {
       title: body.title,
       isActive: body.isActive,
     });
@@ -33,10 +33,10 @@ export async function DELETE(
 ) {
   try {
     const { id } = await context.params;
-    deleteLessonItem(Number(id));
+    await deleteLessonItem(Number(id));
 
     return NextResponse.json({
-      items: getLessonItems(true),
+      items: await getLessonItems(true),
     });
   } catch (error) {
     return NextResponse.json(

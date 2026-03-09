@@ -9,14 +9,14 @@ export async function GET(request: Request) {
   const includeInactive = searchParams.get("includeInactive") !== "false";
 
   return NextResponse.json({
-    items: getLessonItems(includeInactive),
+    items: await getLessonItems(includeInactive),
   });
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const item = createLessonItem(body.title ?? "");
+    const item = await createLessonItem(body.title ?? "");
     return NextResponse.json({ item }, { status: 201 });
   } catch (error) {
     return NextResponse.json(

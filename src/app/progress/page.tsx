@@ -3,8 +3,8 @@ import { getLatestProgressByClass } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-export default function ProgressPage() {
-  const progressItems = getLatestProgressByClass();
+export default async function ProgressPage() {
+  const progressItems = await getLatestProgressByClass();
 
   return (
     <AppShell

@@ -8,10 +8,10 @@ function getToday() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export default function BoardPage() {
+export default async function BoardPage() {
   const today = getToday();
-  const items = getLessonItems(false);
-  const rows = getLessonRows(today);
+  const items = await getLessonItems(false);
+  const rows = await getLessonRows(today);
 
   return (
     <AppShell

@@ -11,7 +11,7 @@ export async function PATCH(
   try {
     const { id } = await context.params;
     const body = await request.json();
-    const row = updateLessonRow(Number(id), {
+    const row = await updateLessonRow(Number(id), {
       lessonDate: body.lessonDate ?? "",
       period: Number(body.period),
       lessonItemId: Number(body.lessonItemId),

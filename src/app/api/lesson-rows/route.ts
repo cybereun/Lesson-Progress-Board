@@ -9,14 +9,14 @@ export async function GET(request: Request) {
   const date = searchParams.get("date") ?? undefined;
 
   return NextResponse.json({
-    rows: getLessonRows(date),
+    rows: await getLessonRows(date),
   });
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const row = createLessonRow({
+    const row = await createLessonRow({
       lessonDate: body.lessonDate ?? "",
       period: Number(body.period),
       lessonItemId: Number(body.lessonItemId),

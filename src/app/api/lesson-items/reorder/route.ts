@@ -7,10 +7,10 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    reorderLessonItems(body.ids ?? []);
+    await reorderLessonItems(body.ids ?? []);
 
     return NextResponse.json({
-      items: getLessonItems(true),
+      items: await getLessonItems(true),
     });
   } catch (error) {
     return NextResponse.json(

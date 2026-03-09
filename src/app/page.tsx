@@ -4,10 +4,10 @@ import { getLatestProgressByClass, getLessonItems, getLessonRows } from "@/lib/d
 
 export const dynamic = "force-dynamic";
 
-export default function HomePage() {
-  const items = getLessonItems(false);
-  const rows = getLessonRows();
-  const latest = getLatestProgressByClass();
+export default async function HomePage() {
+  const items = await getLessonItems(false);
+  const rows = await getLessonRows();
+  const latest = await getLatestProgressByClass();
   const completedCount = latest.filter((item) => item.status === "O").length;
 
   return (

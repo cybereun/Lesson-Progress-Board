@@ -12,7 +12,7 @@ export async function PATCH(
   try {
     const { id } = await context.params;
     const body = await request.json();
-    const check = updateLessonCheck(Number(id), body.status as LessonStatus);
+    const check = await updateLessonCheck(Number(id), body.status as LessonStatus);
 
     return NextResponse.json({ check });
   } catch (error) {

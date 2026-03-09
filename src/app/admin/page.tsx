@@ -4,8 +4,8 @@ import { getLessonItems } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminPage() {
-  const items = getLessonItems(true);
+export default async function AdminPage() {
+  const items = await getLessonItems(true);
 
   return (
     <AppShell

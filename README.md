@@ -49,6 +49,12 @@ To run on another port:
 powershell -ExecutionPolicy Bypass -File .\scripts\local.ps1 -Command dev -Port 3100
 ```
 
+## Deploy on Vercel
+
+- If `POSTGRES_URL`, `POSTGRES_PRISMA_URL`, `DATABASE_URL`, or `POSTGRES_URL_NON_POOLING` is set, the app uses Postgres.
+- If no database URL is set on Vercel, the app falls back to in-memory storage to avoid a 500 crash.
+- In-memory mode is only for preview or demo use. Data will not persist reliably between deployments or server instances.
+
 ## Common Commands
 
 ```powershell
