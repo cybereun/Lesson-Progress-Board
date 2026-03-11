@@ -41,7 +41,6 @@ export default async function ProgressPage() {
               </div>
               <div className="mt-4 space-y-2 text-sm leading-6 text-[var(--muted)]">
                 <p>날짜: {item.lessonDate ?? "-"}</p>
-                <p>교시: {item.period ? `${item.period}교시` : "-"}</p>
                 <p>수업내용: {item.lessonItemTitle ?? "-"}</p>
               </div>
             </article>

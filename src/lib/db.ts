@@ -25,7 +25,7 @@ type LessonStore = {
   }): Promise<LessonRow>;
   updateLessonRow(
     id: number,
-    data: { lessonDate: string; period: number; lessonItemId: number },
+    data: { lessonDate: string; period: number; lessonItemId: number; note?: string },
   ): Promise<LessonRow>;
   updateLessonCheck(id: number, status: LessonStatus): Promise<LessonCheck>;
   getLatestProgressByClass(): Promise<LatestProgress[]>;
@@ -227,9 +227,6 @@ function createMemoryStore(): LessonStore {
       if (a.lessonDate !== b.lessonDate) {
         return a.lessonDate < b.lessonDate ? 1 : -1;
       }
-      if (a.period !== b.period) {
-        return a.period - b.period;
-      }
       return b.id - a.id;
     });
   }
@@ -395,6 +392,7 @@ function createMemoryStore(): LessonStore {
         ...state.lessonRows[rowIndex],
         lessonDate,
         period: data.period,
+        note: data.note?.trim() || null,
         lessonItemId: data.lessonItemId,
       };
 
@@ -561,7 +559,7 @@ async function createSqliteStore(): Promise<LessonStore> {
       INNER JOIN lesson_items li ON li.id = lr.lesson_item_id
       INNER JOIN lesson_checks lc ON lc.lesson_row_id = lr.id
       ${date ? "WHERE lr.lesson_date = ?" : ""}
-      ORDER BY lr.lesson_date DESC, lr.period ASC, lr.id DESC, lc.class_no ASC
+      ORDER BY lr.lesson_date DESC, lr.id DESC, lc.class_no ASC
     `;
 
     const rows = db.prepare(query).all(...(date ? [date] : [])) as LessonRowResult[];
@@ -715,10 +713,10 @@ async function createSqliteStore(): Promise<LessonStore> {
       db.prepare(
         `
         UPDATE lesson_rows
-        SET lesson_date = ?, period = ?, lesson_item_id = ?
+        SET lesson_date = ?, period = ?, lesson_item_id = ?, note = ?
         WHERE id = ?
         `,
-      ).run(lessonDate, data.period, data.lessonItemId, id);
+      ).run(lessonDate, data.period, data.lessonItemId, data.note?.trim() || null, id);
 
       return store.getLessonRowById(id);
     },
@@ -764,7 +762,7 @@ async function createSqliteStore(): Promise<LessonStore> {
           INNER JOIN lesson_rows lr ON lr.id = lc.lesson_row_id
           INNER JOIN lesson_items li ON li.id = lr.lesson_item_id
           WHERE lc.status IN ('O', 'X')
-          ORDER BY lc.class_no ASC, lr.lesson_date DESC, lr.period DESC, lc.updated_at DESC
+          ORDER BY lc.class_no ASC, lr.lesson_date DESC, lr.id DESC, lc.updated_at DESC
           `,
         )
         .all() as ProgressRow[];
@@ -860,7 +858,7 @@ async function createPostgresStore(connectionString: string): Promise<LessonStor
           INNER JOIN lesson_items li ON li.id = lr.lesson_item_id
           INNER JOIN lesson_checks lc ON lc.lesson_row_id = lr.id
           WHERE lr.lesson_date = ${date}
-          ORDER BY lr.lesson_date DESC, lr.period ASC, lr.id DESC, lc.class_no ASC
+          ORDER BY lr.lesson_date DESC, lr.id DESC, lc.class_no ASC
         `
       : await sql<LessonRowResult[]>`
           SELECT
@@ -878,7 +876,7 @@ async function createPostgresStore(connectionString: string): Promise<LessonStor
           FROM lesson_rows lr
           INNER JOIN lesson_items li ON li.id = lr.lesson_item_id
           INNER JOIN lesson_checks lc ON lc.lesson_row_id = lr.id
-          ORDER BY lr.lesson_date DESC, lr.period ASC, lr.id DESC, lc.class_no ASC
+          ORDER BY lr.lesson_date DESC, lr.id DESC, lc.class_no ASC
         `;
 
     return buildLessonRows(rows);
@@ -1038,7 +1036,8 @@ async function createPostgresStore(connectionString: string): Promise<LessonStor
         UPDATE lesson_rows
         SET lesson_date = ${lessonDate},
             period = ${data.period},
-            lesson_item_id = ${data.lessonItemId}
+            lesson_item_id = ${data.lessonItemId},
+            note = ${data.note?.trim() || null}
         WHERE id = ${id}
       `;
 
@@ -1077,7 +1076,7 @@ async function createPostgresStore(connectionString: string): Promise<LessonStor
         INNER JOIN lesson_rows lr ON lr.id = lc.lesson_row_id
         INNER JOIN lesson_items li ON li.id = lr.lesson_item_id
         WHERE lc.status IN ('O', 'X')
-        ORDER BY lc.class_no ASC, lr.lesson_date DESC, lr.period DESC, lc.updated_at DESC
+        ORDER BY lc.class_no ASC, lr.lesson_date DESC, lr.id DESC, lc.updated_at DESC
       `;
 
       return buildLatestProgress(rows);
@@ -1164,7 +1163,7 @@ export async function createLessonRow(data: {
 
 export async function updateLessonRow(
   id: number,
-  data: { lessonDate: string; period: number; lessonItemId: number },
+  data: { lessonDate: string; period: number; lessonItemId: number; note?: string },
 ): Promise<LessonRow> {
   return (await getStore()).updateLessonRow(id, data);
 }

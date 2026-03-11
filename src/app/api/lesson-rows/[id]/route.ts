@@ -11,10 +11,12 @@ export async function PATCH(
   try {
     const { id } = await context.params;
     const body = await request.json();
+    const period = Number(body.period ?? 1);
     const row = await updateLessonRow(Number(id), {
       lessonDate: body.lessonDate ?? "",
-      period: Number(body.period),
+      period,
       lessonItemId: Number(body.lessonItemId),
+      note: body.note,
     });
 
     return NextResponse.json({ row });

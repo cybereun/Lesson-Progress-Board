@@ -11,13 +11,13 @@ function getToday() {
 export default async function BoardPage() {
   const today = getToday();
   const items = await getLessonItems(false);
-  const rows = await getLessonRows(today);
+  const rows = await getLessonRows();
 
   return (
     <AppShell
       currentPath="/board"
       title="실행창"
-      description="날짜와 교시 기준으로 수업행을 만들고 1반부터 9반까지 O/X를 빠르게 기록합니다."
+      description="날짜와 수업내용으로 수업행을 만들고, 누적 실행표에서 1반부터 9반까지 O/X를 빠르게 기록합니다."
     >
       <BoardPanel initialItems={items} initialRows={rows} initialDate={today} />
     </AppShell>

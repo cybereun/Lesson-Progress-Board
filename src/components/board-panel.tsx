@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import { CLASS_NUMBERS, PERIODS } from "@/lib/constants";
+import { useState } from "react";
+import { CLASS_NUMBERS } from "@/lib/constants";
 import type { LessonItem, LessonRow, LessonStatus } from "@/lib/types";
 
 type BoardPanelProps = {
@@ -12,8 +12,8 @@ type BoardPanelProps = {
 
 type EditDraft = {
   lessonDate: string;
-  period: number;
   lessonItemId: number;
+  note: string;
 };
 
 const nextStatusMap: Record<LessonStatus, LessonStatus> = {
@@ -28,10 +28,6 @@ function sortRows(rows: LessonRow[]) {
       return a.lessonDate < b.lessonDate ? 1 : -1;
     }
 
-    if (a.period !== b.period) {
-      return a.period - b.period;
-    }
-
     return b.id - a.id;
   });
 }
@@ -44,7 +40,6 @@ export function BoardPanel({
   const [items] = useState(initialItems);
   const [rows, setRows] = useState(sortRows(initialRows));
   const [selectedDate, setSelectedDate] = useState(initialDate);
-  const [selectedPeriod, setSelectedPeriod] = useState(1);
   const [selectedLessonItemId, setSelectedLessonItemId] = useState(
     initialItems[0]?.id ?? 0,
   );
@@ -52,25 +47,6 @@ export function BoardPanel({
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
   const [editDraft, setEditDraft] = useState<EditDraft | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    startTransition(async () => {
-      const response = await fetch(`/api/lesson-rows?date=${selectedDate}`, {
-        cache: "no-store",
-      });
-      const payload = await response.json();
-
-      if (!response.ok) {
-        setMessage(payload.error ?? "수업행을 불러오지 못했습니다.");
-        return;
-      }
-
-      setRows(sortRows(payload.rows));
-      setEditingRowId(null);
-      setEditDraft(null);
-    });
-  }, [selectedDate]);
 
   async function handleCreateRow(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -81,7 +57,7 @@ export function BoardPanel({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         lessonDate: selectedDate,
-        period: selectedPeriod,
+        period: 1,
         lessonItemId: selectedLessonItemId,
         note,
       }),
@@ -94,9 +70,7 @@ export function BoardPanel({
       return;
     }
 
-    if (payload.row.lessonDate === selectedDate) {
-      setRows((current) => sortRows([payload.row, ...current]));
-    }
+    setRows((current) => sortRows([payload.row, ...current]));
     setNote("");
     setMessage("수업행을 추가했습니다.");
   }
@@ -105,8 +79,8 @@ export function BoardPanel({
     setEditingRowId(row.id);
     setEditDraft({
       lessonDate: row.lessonDate,
-      period: row.period,
       lessonItemId: row.lessonItemId,
+      note: row.note ?? "",
     });
     setMessage(null);
   }
@@ -122,10 +96,14 @@ export function BoardPanel({
       return;
     }
 
+    const currentRow = rows.find((row) => row.id === rowId);
     const response = await fetch(`/api/lesson-rows/${rowId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editDraft),
+      body: JSON.stringify({
+        ...editDraft,
+        period: currentRow?.period ?? 1,
+      }),
     });
 
     const payload = await response.json();
@@ -135,15 +113,12 @@ export function BoardPanel({
       return;
     }
 
-    setRows((current) => {
-      const filtered = current.filter((row) => row.id !== rowId);
-
-      if (payload.row.lessonDate !== selectedDate) {
-        return sortRows(filtered);
-      }
-
-      return sortRows([payload.row, ...filtered]);
-    });
+    setRows((current) =>
+      sortRows([
+        payload.row,
+        ...current.filter((row) => row.id !== rowId),
+      ]),
+    );
 
     setEditingRowId(null);
     setEditDraft(null);
@@ -220,11 +195,12 @@ export function BoardPanel({
         <div className="mb-5 space-y-2">
           <h2 className="text-xl font-bold">새 수업행 추가</h2>
           <p className="text-sm leading-6 text-[var(--muted)]">
-            날짜, 교시, 수업내용을 정한 뒤 한 줄을 만들면 1반부터 9반까지 체크칸이 자동 생성됩니다.
+            날짜와 수업내용을 정해 한 줄을 만들면 기존 실행표는 그대로 유지되고,
+            새 행만 계속 누적됩니다.
           </p>
         </div>
         <form
-          className="grid gap-3 md:grid-cols-[1fr_140px_1.4fr_1fr_auto]"
+          className="grid gap-3 md:grid-cols-[1fr_1.5fr_1fr_auto]"
           onSubmit={handleCreateRow}
         >
           <input
@@ -233,17 +209,6 @@ export function BoardPanel({
             onChange={(event) => setSelectedDate(event.target.value)}
             className="rounded-2xl border border-[var(--line)] bg-white px-4 py-3 outline-none transition focus:border-[var(--accent)]"
           />
-          <select
-            value={selectedPeriod}
-            onChange={(event) => setSelectedPeriod(Number(event.target.value))}
-            className="rounded-2xl border border-[var(--line)] bg-white px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-          >
-            {PERIODS.map((period) => (
-              <option key={period} value={period}>
-                {period}교시
-              </option>
-            ))}
-          </select>
           <select
             value={selectedLessonItemId}
             onChange={(event) => setSelectedLessonItemId(Number(event.target.value))}
@@ -263,12 +228,15 @@ export function BoardPanel({
           />
           <button
             type="submit"
-            disabled={isPending || !selectedLessonItemId}
+            disabled={!selectedLessonItemId}
             className="rounded-2xl bg-[var(--accent)] px-5 py-3 font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
           >
             행 추가
           </button>
         </form>
+        <p className="mt-3 text-xs text-[var(--muted)]">
+          날짜 입력은 새로 추가하는 행에만 적용됩니다. 아래 실행표는 날짜를 바꿔도 유지됩니다.
+        </p>
         {message ? (
           <p className="mt-4 text-sm font-medium text-[var(--foreground)]">{message}</p>
         ) : null}
@@ -277,9 +245,9 @@ export function BoardPanel({
       <section className="panel overflow-hidden">
         <div className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
           <div>
-            <h2 className="text-xl font-bold">{selectedDate} 실행표</h2>
+            <h2 className="text-xl font-bold">누적 실행표</h2>
             <p className="text-sm text-[var(--muted)]">
-              셀을 클릭하면 빈칸 → O → X → 빈칸 순서로 즉시 저장됩니다.
+              상태 버튼을 누르면 빈칸, O, X 순서로 즉시 변경됩니다.
             </p>
           </div>
           <div className="rounded-full bg-[var(--surface-strong)] px-4 py-2 text-sm font-semibold text-[var(--foreground)]">
@@ -294,10 +262,10 @@ export function BoardPanel({
                   날짜
                 </th>
                 <th className="border-b border-[var(--line)] px-4 py-4 text-left text-sm font-semibold">
-                  교시
+                  수업내용
                 </th>
                 <th className="border-b border-[var(--line)] px-4 py-4 text-left text-sm font-semibold">
-                  수업내용
+                  메모
                 </th>
                 <th className="border-b border-[var(--line)] px-4 py-4 text-left text-sm font-semibold">
                   관리
@@ -336,29 +304,6 @@ export function BoardPanel({
                         row.lessonDate
                       )}
                     </td>
-                    <td className="border-b border-[var(--line)] px-4 py-3 text-sm">
-                      {isEditing ? (
-                        <select
-                          value={editDraft.period}
-                          onChange={(event) =>
-                            setEditDraft((current) =>
-                              current
-                                ? { ...current, period: Number(event.target.value) }
-                                : current,
-                            )
-                          }
-                          className="w-full rounded-xl border border-[var(--line)] bg-white px-3 py-2 outline-none transition focus:border-[var(--accent)]"
-                        >
-                          {PERIODS.map((period) => (
-                            <option key={period} value={period}>
-                              {period}교시
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        `${row.period}교시`
-                      )}
-                    </td>
                     <td className="border-b border-[var(--line)] px-4 py-3">
                       {isEditing ? (
                         <select
@@ -382,12 +327,25 @@ export function BoardPanel({
                           ))}
                         </select>
                       ) : (
-                        <>
-                          <div className="font-semibold">{row.lessonItemTitle}</div>
-                          {row.note ? (
-                            <div className="mt-1 text-xs text-[var(--muted)]">{row.note}</div>
-                          ) : null}
-                        </>
+                        <div className="font-semibold">{row.lessonItemTitle}</div>
+                      )}
+                    </td>
+                    <td className="border-b border-[var(--line)] px-4 py-3 text-sm text-[var(--muted)]">
+                      {isEditing ? (
+                        <input
+                          value={editDraft.note}
+                          onChange={(event) =>
+                            setEditDraft((current) =>
+                              current ? { ...current, note: event.target.value } : current,
+                            )
+                          }
+                          placeholder="메모(선택)"
+                          className="w-full rounded-xl border border-[var(--line)] bg-white px-3 py-2 outline-none transition focus:border-[var(--accent)]"
+                        />
+                      ) : row.note ? (
+                        row.note
+                      ) : (
+                        "-"
                       )}
                     </td>
                     <td className="border-b border-[var(--line)] px-4 py-3">
@@ -451,7 +409,7 @@ export function BoardPanel({
           </table>
           {rows.length === 0 ? (
             <div className="px-6 py-12 text-center text-sm leading-6 text-[var(--muted)]">
-              선택한 날짜에 등록된 수업행이 없습니다.
+              등록된 수업행이 없습니다.
             </div>
           ) : null}
         </div>

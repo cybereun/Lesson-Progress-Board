@@ -43,7 +43,7 @@ export function AppShell({
             </p>
           </div>
           <div className="rounded-full border border-[var(--line)] bg-[rgba(255,255,255,0.72)] px-4 py-2 text-sm text-[var(--muted)] shadow-sm">
-            단일 과목 · 1반~9반 · 1~7교시
+            단일 과목 · 1반~9반 · 누적 실행표
           </div>
         </div>
         <nav className="flex flex-wrap gap-2 px-4 py-4">
